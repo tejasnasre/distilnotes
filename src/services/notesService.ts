@@ -5,6 +5,10 @@ import {
   noteToString,
   textVectorStore,
 } from "./vectorStores/textVectorStore";
+import {
+  getImageEmbeddings,
+  imageVectorStore,
+} from "./vectorStores/imageVectorStore";
 
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
@@ -37,7 +41,22 @@ export async function createNote(
       });
     }
   } catch (e) {
-    console.error("Failed to index note", e);
+    console.error("Failed to index note text", e);
+  }
+
+  const imageModel = getImageEmbeddings();
+  if (imageModel) {
+    for (const uri of note.imageUris) {
+      try {
+        const embedding = Array.from(await imageModel.forward(uri));
+        await imageVectorStore.add({
+          embedding,
+          metadata: { imageUri: uri, noteId: note.id },
+        });
+      } catch (e) {
+        console.error("Failed to index image", uri, e);
+      }
+    }
   }
 
   return note;
@@ -81,7 +100,30 @@ export async function updateNote(
       });
     }
   } catch (e) {
-    console.error("Failed to re-index note", e);
+    console.error("Failed to re-index note text", e);
+  }
+
+  try {
+    await imageVectorStore.delete({
+      predicate: (r) => r.metadata?.noteId === id,
+    });
+  } catch (e) {
+    console.error("Failed to delete old image embeddings", e);
+  }
+
+  const imageModel = getImageEmbeddings();
+  if (imageModel) {
+    for (const uri of updated.imageUris) {
+      try {
+        const embedding = Array.from(await imageModel.forward(uri));
+        await imageVectorStore.add({
+          embedding,
+          metadata: { imageUri: uri, noteId: id },
+        });
+      } catch (e) {
+        console.error("Failed to re-index image", uri, e);
+      }
+    }
   }
 
   return updated;
@@ -94,8 +136,24 @@ export async function deleteNote(id: string): Promise<void> {
     await textVectorStore.delete({
       predicate: (r) => r.metadata?.noteId === id,
     });
+    await imageVectorStore.delete({
+      predicate: (r) => r.metadata?.noteId === id,
+    });
   } catch (e) {
-    console.error("Failed to remove note from vector store", e);
+    console.error("Failed to remove note from vector stores", e);
+  }
+}
+
+export async function deleteAllNotes(): Promise<void> {
+  await storage.deleteAllNotesData();
+
+  try {
+    await textVectorStore.deleteVectorStore();
+    await imageVectorStore.deleteVectorStore();
+    await textVectorStore.load();
+    await imageVectorStore.load();
+  } catch (e) {
+    console.error("Failed to reset vector stores", e);
   }
 }
 
@@ -132,6 +190,57 @@ export async function searchByText(
       .slice(0, n);
   } catch (e) {
     console.error("Semantic search failed", e);
+    return [];
+  }
+}
+
+function buildSimilarityResults(
+  results: { similarity: number; metadata?: { noteId?: string } }[],
+  notes: Note[]
+): Note[] {
+  const noteIdToMaxSimilarity = new Map<string, number>();
+  for (const r of results) {
+    const noteId = r.metadata?.noteId;
+    if (noteId) {
+      const current = noteIdToMaxSimilarity.get(noteId) ?? -Infinity;
+      noteIdToMaxSimilarity.set(noteId, Math.max(current, r.similarity));
+    }
+  }
+  return notes
+    .filter((n) => noteIdToMaxSimilarity.has(n.id))
+    .map((n) => ({ ...n, similarity: noteIdToMaxSimilarity.get(n.id)! }))
+    .sort((a, b) => (b as any).similarity - (a as any).similarity);
+}
+
+export async function searchImagesByText(
+  query: string,
+  notes: Note[],
+  n: number = 3
+): Promise<Note[]> {
+  try {
+    const results = await imageVectorStore.query({ queryText: query.trim() });
+    return buildSimilarityResults(results, notes).slice(0, n);
+  } catch (e) {
+    console.error("Image text search failed", e);
+    return [];
+  }
+}
+
+export async function searchByImageUri(
+  imageUri: string,
+  notes: Note[],
+  n: number = 3
+): Promise<Note[]> {
+  try {
+    const imageModel = getImageEmbeddings();
+    if (!imageModel) return [];
+    const imageEmbedding = Array.from(await imageModel.forward(imageUri));
+    const results = await imageVectorStore.query({
+      queryEmbedding: imageEmbedding,
+    });
+    return buildSimilarityResults(results, notes).slice(0, n);
+  } catch (e) {
+    console.error("Image search by URI failed", e);
     return [];
   }
 }

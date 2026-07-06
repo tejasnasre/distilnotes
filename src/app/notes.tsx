@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, Image, Pressable, View, RefreshControl } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
-import { Button, Card, Text, TextField, Input } from "heroui-native";
+import { Button, Card, Dialog, Text, TextField, Input } from "heroui-native";
+import { HugeiconsIcon } from "@hugeicons/react-native";
+import { AddCircleIcon, Delete01Icon, Search01Icon } from "@hugeicons/core-free-icons";
 import { Note } from "../types/note";
 import * as notesService from "../services/notesService";
 
@@ -31,6 +33,7 @@ export default function NotesScreen() {
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<Note[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const loadNotes = useCallback(async () => {
@@ -92,6 +95,12 @@ export default function NotesScreen() {
     router.push(`/note/${note.id}` as any);
   }
 
+  async function handleDeleteAll() {
+    await notesService.deleteAllNotes();
+    setDeleteDialogOpen(false);
+    loadNotes();
+  }
+
   return (
     <View className="flex-1 bg-background pt-safe">
       <View className="flex-row items-center justify-between px-5 pt-4 pb-1">
@@ -103,6 +112,16 @@ export default function NotesScreen() {
               : `${notes.length} ${notes.length === 1 ? "note" : "notes"}`}
           </Text>
         </View>
+        {notes.length > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            isIconOnly
+            onPress={() => setDeleteDialogOpen(true)}
+          >
+            <HugeiconsIcon icon={Delete01Icon} size={20} className="text-danger" />
+          </Button>
+        )}
       </View>
 
       <View className="px-5 pb-3 pt-2">
@@ -111,7 +130,12 @@ export default function NotesScreen() {
             placeholder="Search notes..."
             value={search}
             onChangeText={setSearch}
-            className="bg-surface"
+            className="bg-surface pl-10"
+          />
+          <HugeiconsIcon
+            icon={Search01Icon}
+            size={18}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
           />
         </TextField>
       </View>
@@ -178,8 +202,35 @@ export default function NotesScreen() {
         isIconOnly
         onPress={handleCreate}
       >
-        <Text className="text-accent-foreground text-2xl leading-none">+</Text>
+        <HugeiconsIcon icon={AddCircleIcon} size={28} className="text-accent-foreground" />
       </Button>
+
+      <Dialog isOpen={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay />
+          <Dialog.Content>
+            <Dialog.Close variant="ghost" />
+            <View className="mb-5 gap-1.5">
+              <Dialog.Title>Delete All Notes</Dialog.Title>
+              <Dialog.Description>
+                Are you sure you want to delete all {notes.length} notes? This action cannot be undone.
+              </Dialog.Description>
+            </View>
+            <View className="flex-row justify-end gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onPress={() => setDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button variant="danger" size="sm" onPress={handleDeleteAll}>
+                Delete All
+              </Button>
+            </View>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog>
     </View>
   );
 }

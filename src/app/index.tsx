@@ -5,6 +5,7 @@ import { Text } from "heroui-native";
 import { initExecutorch } from "react-native-executorch";
 import { ExpoResourceFetcher } from "react-native-executorch-expo-resource-fetcher";
 import { textVectorStore } from "../services/vectorStores/textVectorStore";
+import { imageVectorStore, initializeImageEmbeddings } from "../services/vectorStores/imageVectorStore";
 
 export default function Index() {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -14,9 +15,11 @@ export default function Index() {
       try {
         initExecutorch({ resourceFetcher: ExpoResourceFetcher });
         await textVectorStore.load();
+        await imageVectorStore.load();
         setIsLoaded(true);
+        initializeImageEmbeddings();
       } catch (e) {
-        console.error("Vector store failed to load", e);
+        console.error("Vector stores failed to load", e);
         setIsLoaded(true);
       }
     })();

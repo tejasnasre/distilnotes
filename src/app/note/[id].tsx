@@ -7,6 +7,8 @@ import {
   TextArea,
   TextField,
 } from "heroui-native";
+import { HugeiconsIcon } from "@hugeicons/react-native";
+import { ArrowLeft01Icon, Cancel01Icon, Delete01Icon, ImageAdd01Icon } from "@hugeicons/core-free-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Image, Pressable, ScrollView, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
@@ -89,7 +91,8 @@ export default function NoteEditorScreen() {
     <View className="flex-1 bg-background pt-safe">
       <View className="flex-row items-center justify-between px-4 py-3">
         <Button variant="ghost" size="sm" onPress={() => router.back()}>
-          ← Notes
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
+          <Text className="ml-1">Notes</Text>
         </Button>
         <View className="flex-row items-center gap-3">
           <Text
@@ -104,7 +107,8 @@ export default function NoteEditorScreen() {
             size="sm"
             onPress={() => setDeleteDialogOpen(true)}
           >
-            Delete
+            <HugeiconsIcon icon={Delete01Icon} size={16} />
+            <Text className="ml-1">Delete</Text>
           </Button>
         </View>
       </View>
@@ -147,9 +151,7 @@ export default function NoteEditorScreen() {
                     onPress={() => handleRemoveImage(uri)}
                     className="absolute -top-2 -right-2 size-6 rounded-full bg-danger items-center justify-center"
                   >
-                    <Text className="text-danger-foreground text-xs font-bold">
-                      ×
-                    </Text>
+                    <HugeiconsIcon icon={Cancel01Icon} size={14} className="text-danger-foreground" />
                   </Pressable>
                 </View>
               ))}
@@ -163,7 +165,8 @@ export default function NoteEditorScreen() {
           onPress={handlePickImages}
           className="mt-4 self-start"
         >
-          + Add Image
+          <HugeiconsIcon icon={ImageAdd01Icon} size={16} />
+          <Text className="ml-1">Add Image</Text>
         </Button>
 
         <View className="h-8" />

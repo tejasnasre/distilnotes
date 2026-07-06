@@ -4,6 +4,10 @@
     "heroui-native": {
       "type": "local",
       "command": ["npx", "-y", "@heroui/native-mcp@latest"]
+    },
+    "hugeicons": {
+      "type": "local",
+      "command": ["npx", "-y", "@hugeicons/mcp-server"]
     }
   }
 }
