@@ -1,9 +1,132 @@
-:root {
-  --font-display:
-    Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
-    Segoe UI Symbol, Noto Color Emoji;
-  --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-  --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
-  --font-serif: Georgia, 'Times New Roman', serif;
+@import "tailwindcss";
+@import "uniwind";
+
+@import "heroui-native/styles";
+
+@source '../node_modules/heroui-native/lib';
+
+@theme {
+  --radius-xs: 3px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
+  --radius-3xl: 14px;
+}
+
+@layer theme {
+  :root {
+
+    @variant light {
+      /* Base Colors */
+      --background: oklch(0.982 0 0);
+      --foreground: oklch(0.348 0 0);
+
+      /* Surface: Used for non-overlay components (cards, accordions, disclosure groups) */
+      --surface: oklch(1 0 0);
+      --surface-foreground: oklch(0.348 0 0);
+
+      /* Overlay: Used for floating/overlay components (dialogs, popovers, modals, menus) */
+      --overlay: oklch(1 0 0);
+      --overlay-foreground: oklch(0.348 0 0);
+
+      --muted: oklch(0.431 0 0);
+
+      --default: oklch(0.916 0 0);
+      --default-foreground: oklch(0.348 0 0);
+
+      /* Accent */
+      --accent: oklch(0.489 0 0);
+      --accent-foreground: oklch(0.955 0 0);
+
+      /* Form Field Defaults - Colors */
+      --field-background: oklch(1 0 0);
+      --field-foreground: oklch(0.348 0 0);
+      --field-placeholder: var(--muted);
+      --field-border: transparent;
+
+      /* Status Colors */
+      --success: oklch(0.72 0.14 165);
+      --success-foreground: oklch(0.25 0.08 165);
+
+      --warning: oklch(0.78 0.12 85);
+      --warning-foreground: oklch(0.3 0.08 85);
+
+      --danger: oklch(0.663 0.098 20);
+      --danger-foreground: oklch(1 0 0);
+
+      /* Component Colors */
+      --segment: oklch(1 0 0);
+      --segment-foreground: oklch(0.348 0 0);
+
+      /* Misc Colors */
+      --border: oklch(0.554 0.002 16);
+      --divider: oklch(0.554 0.002 16);
+      --link: oklch(0.489 0 0);
+
+      /* Shadows */
+      --surface-shadow:
+        0 2px 4px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.06),
+        0 0 1px 0 rgba(0, 0, 0, 0.06);
+      --overlay-shadow:
+        0 4px 16px 0 rgba(24, 24, 27, 0.08), 0 8px 24px 0 rgba(24, 24, 27, 0.09);
+      --field-shadow:
+        0 2px 4px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.06),
+        0 0 1px 0 rgba(0, 0, 0, 0.06);
+    }
+
+    @variant dark {
+      /* Base Colors */
+      --background: oklch(0.289 0 0);
+      --foreground: oklch(0.894 0 0);
+
+      /* Surface: Used for non-overlay components (cards, accordions, disclosure groups) */
+      --surface: oklch(0.321 0 0);
+      --surface-foreground: oklch(0.894 0 0);
+
+      /* Overlay: Used for floating/overlay components (dialogs, popovers, modals, menus) */
+      --overlay: oklch(0.321 0 0);
+      --overlay-foreground: oklch(0.894 0 0);
+
+      --muted: oklch(0.706 0 0);
+
+      --default: oklch(0.39 0 0);
+      --default-foreground: oklch(0.894 0 0);
+
+      /* Accent */
+      --accent: oklch(0.757 0 0);
+      --accent-foreground: oklch(0.289 0 0);
+
+      /* Form Field Defaults - Colors */
+      --field-background: oklch(0.321 0 0);
+      --field-foreground: oklch(0.894 0 0);
+      --field-placeholder: var(--muted);
+      --field-border: transparent;
+
+      /* Status Colors */
+      --success: oklch(0.68 0.16 165);
+      --success-foreground: oklch(0.95 0.008 165);
+
+      --warning: oklch(0.75 0.14 90);
+      --warning-foreground: oklch(0.2 0.04 90);
+
+      --danger: oklch(0.792 0.049 18);
+      --danger-foreground: oklch(0.289 0 0);
+
+      /* Component Colors */
+      --segment: oklch(0.321 0 0);
+      --segment-foreground: oklch(0.894 0 0);
+
+      /* Misc Colors */
+      --border: oklch(0.428 0 0);
+      --divider: oklch(0.428 0 0);
+      --link: oklch(0.757 0 0);
+
+      /* Shadows */
+      --surface-shadow: 0 0 0 0 transparent inset;
+      --overlay-shadow: 0 0 0 0 transparent inset;
+      --field-shadow: 0 0 0 0 transparent inset;
+    }
+  }
 }
