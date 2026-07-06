@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, Pressable, View, RefreshControl } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Button, Card, Text, TextField, Input } from "heroui-native";
@@ -29,7 +29,9 @@ export default function NotesScreen() {
   const router = useRouter();
   const [notes, setNotes] = useState<Note[]>([]);
   const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<Note[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const loadNotes = useCallback(async () => {
     const allNotes = await notesService.getAllNotes();
@@ -42,19 +44,42 @@ export default function NotesScreen() {
     }, [loadNotes])
   );
 
-  const sortedAndFiltered = useMemo(() => {
-    const sorted = [...notes].sort(
-      (a, b) =>
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    );
-    if (!search.trim()) return sorted;
-    const q = search.toLowerCase();
-    return sorted.filter(
-      (n) =>
-        n.title.toLowerCase().includes(q) ||
-        n.content.toLowerCase().includes(q)
-    );
-  }, [notes, search]);
+  useEffect(() => {
+    if (!search.trim()) return;
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(async () => {
+      const semantic = await notesService.searchByText(search, notes);
+      if (semantic.length > 0) {
+        setSearchResults(semantic);
+      } else {
+        const q = search.toLowerCase();
+        const filtered = notes.filter(
+          (n) =>
+            n.title.toLowerCase().includes(q) ||
+            n.content.toLowerCase().includes(q)
+        );
+        setSearchResults(filtered);
+      }
+    }, 300);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [search, notes]);
+
+  const displayedNotes = useMemo(() => {
+    if (!search.trim()) {
+      return [...notes].sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      );
+    }
+    return searchResults ?? [];
+  }, [notes, search, searchResults]);
+
+  const isSearching = search.trim().length > 0;
 
   async function handleRefresh() {
     setRefreshing(true);
@@ -73,7 +98,9 @@ export default function NotesScreen() {
         <View>
           <Text className="text-3xl font-bold text-foreground">Notes</Text>
           <Text className="text-sm text-muted mt-0.5">
-            {notes.length} {notes.length === 1 ? "note" : "notes"}
+            {isSearching
+              ? `${displayedNotes.length} result${displayedNotes.length === 1 ? "" : "s"}`
+              : `${notes.length} ${notes.length === 1 ? "note" : "notes"}`}
           </Text>
         </View>
       </View>
@@ -90,7 +117,7 @@ export default function NotesScreen() {
       </View>
 
       <FlatList
-        data={sortedAndFiltered}
+        data={displayedNotes}
         keyExtractor={(item) => item.id}
         contentContainerClassName="px-5 pb-24 gap-3"
         refreshControl={

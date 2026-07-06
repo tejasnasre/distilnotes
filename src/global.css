@@ -6,6 +6,12 @@
 @source '../node_modules/heroui-native/lib';
 
 @theme {
+  --font-sans: 'OpenSans_400Regular';
+  --font-normal: 'OpenSans_400Regular';
+  --font-medium: 'OpenSans_500Medium';
+  --font-semibold: 'OpenSans_600SemiBold';
+  --font-bold: 'OpenSans_700Bold';
+
   --radius-xs: 3px;
   --radius-sm: 4px;
   --radius-md: 6px;
