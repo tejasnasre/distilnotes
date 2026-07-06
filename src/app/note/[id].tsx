@@ -8,7 +8,8 @@ import {
   TextField,
 } from "heroui-native";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { View } from "react-native";
+import { Image, Pressable, ScrollView, View } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import * as notesService from "../../services/notesService";
 import { Note } from "../../types/note";
 
@@ -18,6 +19,7 @@ export default function NoteEditorScreen() {
   const [note, setNote] = useState<Note | null>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [imageUris, setImageUris] = useState<string[]>([]);
   const [saved, setSaved] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const isInitialLoad = useRef(true);
@@ -28,6 +30,7 @@ export default function NoteEditorScreen() {
         setNote(n);
         setTitle(n.title);
         setContent(n.content);
+        setImageUris(n.imageUris);
         isInitialLoad.current = false;
       }
     });
@@ -36,11 +39,11 @@ export default function NoteEditorScreen() {
   useEffect(() => {
     if (!note || isInitialLoad.current) return;
     const timer = setTimeout(() => {
-      notesService.updateNote(id, { title, content });
+      notesService.updateNote(id, { title, content, imageUris });
       setSaved(true);
     }, 500);
     return () => clearTimeout(timer);
-  }, [id, note, title, content]);
+  }, [id, note, title, content, imageUris]);
 
   const handleChangeTitle = useCallback((text: string) => {
     setTitle(text);
@@ -51,6 +54,28 @@ export default function NoteEditorScreen() {
     setContent(text);
     setSaved(false);
   }, []);
+
+  async function handlePickImages() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsMultipleSelection: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const newUris = result.assets.map((a) => a.uri);
+      setImageUris((prev) => [...prev, ...newUris]);
+      setSaved(false);
+    }
+  }
+
+  function handleRemoveImage(uri: string) {
+    setImageUris((prev) => prev.filter((u) => u !== uri));
+    setSaved(false);
+  }
 
   async function handleDelete() {
     await notesService.deleteNote(id);
@@ -95,16 +120,54 @@ export default function NoteEditorScreen() {
         </TextField>
       </View>
 
-      <View className="flex-1 px-4 pt-4">
-        <TextField className="flex-1">
+      <ScrollView className="flex-1 px-4 pt-4">
+        <TextField>
           <TextArea
             placeholder="Start writing..."
             value={content}
             onChangeText={handleChangeContent}
-            className="flex-1 text-base leading-relaxed min-h-[300]"
+            className="text-base leading-relaxed min-h-[200]"
           />
         </TextField>
-      </View>
+
+        {imageUris.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="mt-4"
+          >
+            <View className="flex-row gap-3">
+              {imageUris.map((uri) => (
+                <View key={uri} className="relative">
+                  <Image
+                    source={{ uri }}
+                    className="size-24 rounded-xl bg-surface"
+                  />
+                  <Pressable
+                    onPress={() => handleRemoveImage(uri)}
+                    className="absolute -top-2 -right-2 size-6 rounded-full bg-danger items-center justify-center"
+                  >
+                    <Text className="text-danger-foreground text-xs font-bold">
+                      ×
+                    </Text>
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+        )}
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onPress={handlePickImages}
+          className="mt-4 self-start"
+        >
+          + Add Image
+        </Button>
+
+        <View className="h-8" />
+      </ScrollView>
 
       <View className="pb-safe" />
 

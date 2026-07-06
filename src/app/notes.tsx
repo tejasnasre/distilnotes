@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, Pressable, View, RefreshControl } from "react-native";
+import { FlatList, Image, Pressable, View, RefreshControl } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Button, Card, Text, TextField, Input } from "heroui-native";
 import { Note } from "../types/note";
@@ -144,18 +144,28 @@ export default function NotesScreen() {
           >
             <Card className="active:opacity-80">
               <Card.Body>
-                <Card.Title
-                  numberOfLines={1}
-                  className={!item.title ? "italic text-muted" : ""}
-                >
-                  {item.title || "Untitled"}
-                </Card.Title>
-                <Card.Description numberOfLines={2} className="mt-1">
-                  {item.content || "No content"}
-                </Card.Description>
-                <Card.Description className="text-xs mt-2 text-muted">
-                  {formatRelativeDate(item.updatedAt)}
-                </Card.Description>
+                <View className="flex-row gap-3">
+                  <View className="flex-1">
+                    <Card.Title
+                      numberOfLines={1}
+                      className={!item.title ? "italic text-muted" : ""}
+                    >
+                      {item.title || "Untitled"}
+                    </Card.Title>
+                    <Card.Description numberOfLines={2} className="mt-1">
+                      {item.content || "No content"}
+                    </Card.Description>
+                    <Card.Description className="text-xs mt-2 text-muted">
+                      {formatRelativeDate(item.updatedAt)}
+                    </Card.Description>
+                  </View>
+                  {item.imageUris && item.imageUris.length > 0 && (
+                    <Image
+                      source={{ uri: item.imageUris[0] }}
+                      className="size-16 rounded-lg bg-surface"
+                    />
+                  )}
+                </View>
               </Card.Body>
             </Card>
           </Pressable>
